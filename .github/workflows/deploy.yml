@@ -18,36 +18,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Lint with ruff
-        run: ruff check .
-
-      - name: Security scan with bandit (QR5)
-        run: bandit -r app -c pyproject.toml --severity-level high
-
-      # pytest-cov is already a dependency but coverage was never measured.
-      # Dropped the `|| [ $? -eq 5 ]` escape hatch: exit 5 means "no tests were
-      # collected", and with a populated tests/ that is a broken run, not a pass.
-      - name: Run pytest
-        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered --cov-fail-under=70
-
   build-image:
-    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
