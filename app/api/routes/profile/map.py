@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.cities import City
 from app.models.users import Admin, Alumni
 from app.schemas.profile import MapLocationGroup, MapLocationsResponse
+from app.services import cities as city_service
 
 
 router = APIRouter()
@@ -21,16 +21,13 @@ def get_map_locations(
     Return alumni counts grouped by location for map pin display.
 
     Only alumni with ``show_location=True`` and a resolvable city/country are
-    included. Coordinates come from a JOIN with the cities table so the mobile
-    client does not need to make one round-trip per city to look up lat/lng.
+    included. Coordinates come from the in-memory city index, so the mobile
+    client does not need one round-trip per city to look up lat/lng.
 
-    The location string is stored as ``"Country, City"`` (comma-space separated).
-    We split it with PostgreSQL's ``split_part()`` function to join against the
-    cities table, which is indexed on (city, country).
-
-    Indexes used:
-    - ``ix_alumni_show_location_location`` composite B-tree (leading filter)
-    - ``idx_city_name`` / ``idx_country`` B-tree on cities table (JOIN condition)
+    The location string is stored as ``"Country, City"`` (comma-space separated);
+    we split it with PostgreSQL's ``split_part()`` and resolve lat/lng against
+    the embedded cities dataset. Locations that don't resolve are dropped,
+    matching the previous JOIN-with-cities-table semantics.
     """
     country_expr = func.split_part(Alumni.location, ", ", 1)
     city_expr = func.split_part(Alumni.location, ", ", 2)
@@ -39,14 +36,7 @@ def get_map_locations(
         db.query(
             country_expr.label("country"),
             city_expr.label("city"),
-            City.lat,
-            City.lng,
             func.count(Alumni.id).label("count"),
-        )
-        .join(
-            City,
-            (func.lower(city_expr) == func.lower(City.city))
-            & (func.lower(country_expr) == func.lower(City.country)),
         )
         .filter(
             Alumni.show_location.is_(True),
@@ -55,18 +45,22 @@ def get_map_locations(
             Alumni.is_verified.is_(True),
             Alumni.is_banned.is_(False),
         )
-        .group_by(country_expr, city_expr, City.lat, City.lng)
+        .group_by(country_expr, city_expr)
         .all()
     )
 
-    locations = [
-        MapLocationGroup(
-            country=row.country,
-            city=row.city,
-            lat=row.lat,
-            lng=row.lng,
-            count=row.count,
+    locations = []
+    for row in rows:
+        coords = city_service.get_coordinates(row.city, row.country)
+        if coords is None:
+            continue
+        locations.append(
+            MapLocationGroup(
+                country=row.country,
+                city=row.city,
+                lat=coords[0],
+                lng=coords[1],
+                count=row.count,
+            )
         )
-        for row in rows
-    ]
     return MapLocationsResponse(locations=locations)

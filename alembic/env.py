@@ -9,7 +9,6 @@ from app.core.database import Base
 
 # Import all models here for autogenerate support
 from app.models.allowed_emails import AllowedEmail
-from app.models.cities import City
 from app.models.email_verification import EmailVerification
 from app.models.events import Event
 from app.models.login_code import LoginCode
