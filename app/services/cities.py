@@ -6,8 +6,8 @@ folded names; coordinates lookup is a dict keyed by (folded city, folded country
 from __future__ import annotations
 
 import bisect
-import unicodedata
 from pathlib import Path
+import unicodedata
 
 _DATA = Path(__file__).resolve().parents[1] / "data" / "cities.tsv"
 

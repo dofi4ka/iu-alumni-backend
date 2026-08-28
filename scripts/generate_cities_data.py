@@ -11,9 +11,9 @@ every tiered dump; coordinates come from OpenStreetMap/Nominatim).
 from __future__ import annotations
 
 import io
+from pathlib import Path
 import urllib.request
 import zipfile
-from pathlib import Path
 
 GEONAMES = "https://download.geonames.org/export/dump"
 ROOT = Path(__file__).resolve().parents[1]
