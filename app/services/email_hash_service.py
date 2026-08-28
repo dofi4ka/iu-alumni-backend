@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import io
 import logging
 import os
 
@@ -88,8 +89,8 @@ def process_excel_file(db: Session, file_content: bytes) -> dict:
             f"Starting to process Excel file, content size: {len(file_content)} bytes"
         )
 
-        # Read Excel file
-        emails_df = pd.read_excel(file_content)
+        # Read Excel file (pandas needs a file-like object, not raw bytes)
+        emails_df = pd.read_excel(io.BytesIO(file_content))
 
         logger.info(f"Excel file loaded, shape: {emails_df.shape}")
 
