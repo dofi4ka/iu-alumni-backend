@@ -1,6 +1,18 @@
 from pydantic import BaseModel
 
 
+class CityBase(BaseModel):
+    city: str
+    country: str
+    lat: float
+    lng: float
+
+
+class City(CityBase):
+    class Config:
+        from_attributes = True
+
+
 class CityLocation(BaseModel):
     """Matches the Dart CityLocation class"""
 
