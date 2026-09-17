@@ -69,10 +69,6 @@ app = FastAPI(
     title="Alumni API",
     description="API for the IU Alumni platform",
     version="1.0.0",
-    # Enable docs only in development
-    docs_url="/docs" if IS_DEVELOPMENT else None,
-    redoc_url="/redoc" if IS_DEVELOPMENT else None,
-    openapi_url="/openapi.json" if IS_DEVELOPMENT else None,
     openapi_tags=[
         {
             "name": "Authentication",
@@ -120,7 +116,9 @@ api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
 api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
 api_v1.include_router(badges_router, prefix="/badges", tags=["Badges"])
 api_v1.include_router(projects_router, prefix="/projects", tags=["Projects"])
-api_v1.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
+api_v1.include_router(
+    notifications_router, prefix="/notifications", tags=["Notifications"]
+)
 app.include_router(api_v1)
 app.include_router(telegram_router, tags=["Telegram"])
 
