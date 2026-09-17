@@ -66,6 +66,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV").upper()
 IS_DEVELOPMENT = ENVIRONMENT in ("DEV", "TEST")
 
 app = FastAPI(
+    root_path=os.getenv("FASTAPI_ROOT_PATH", "/api"),
     title="Alumni API",
     description="API for the IU Alumni platform",
     version="1.0.0",
@@ -108,7 +109,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-api_v1 = APIRouter(prefix="/api/v1")
+api_v1 = APIRouter(prefix="/v1")
 api_v1.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_v1.include_router(profile_router, prefix="/profile", tags=["Profile"])
 api_v1.include_router(events_router, prefix="/events", tags=["Events"])
